@@ -622,7 +622,33 @@
 								<p class="text-[10px] text-gray-500 uppercase font-bold">Votos Efectivos</p>
 							</div>
 						</div>
+						<div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-l-4 border-yellow-500">
+							<div class="flex items-center gap-4">
+								<span class="text-2xl font-black">2</span>
+								<div>
+									<p class="font-black text-dark text-lg">MÉXICO</p>
+									<p class="text-xs text-blue-600 font-bold uppercase">Fortalecimiento en táctica de afinidad</p>
+								</div>
+							</div>
+							<div class="text-right">
+								<p class="text-2xl font-black text-primary">440%</p>
+								<p class="text-[10px] text-gray-500 uppercase font-bold">Cumplimiento de meta Líderes + Referidos</p>
+							</div>
 						</div>
+						<div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-l-4 border-yellow-500">
+							<div class="flex items-center gap-4">
+								<span class="text-2xl font-black">3</span>
+								<div>
+									<p class="font-black text-dark text-lg">PAÍSES BAJOS</p>
+									<p class="text-xs text-blue-600 font-bold uppercase">País con mayor efectividad en la conversion de votos</p>
+								</div>
+							</div>
+							<div class="text-right">
+								<p class="text-2xl font-black text-primary">95%</p>
+								<p class="text-[10px] text-gray-500 uppercase font-bold">Cumplimiento de meta Líderes + Referidos</p>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -1194,48 +1220,127 @@
 		//fin script Afinidad
 		
 		//inicio script Ranking
-
-		//fin script Ranking
-		let metricsChartInstance = null;
 		
-		//grafica
-		function initAppMetrics() {
-			const canvas = document.getElementById('metricsComparisonChart');
-			if (!canvas) return; // Seguridad
+		//inicio script Ranking
+			function renderRankingTable() {
+				// 1. Obtener contenedores
+				const votosContainer = document.querySelector('#view-ranking .lg\\:grid-cols-2 > div:first-child .p-6');
+				const crecimientoContainer = document.querySelector('#view-ranking .lg\\:grid-cols-2 > div:last-child .p-6');
 
-			const ctx = canvas.getContext('2d');
-			
-			// Destruir instancia previa para evitar bugs visuales al re-entrar
-			if (window.metricsChartInstance) {
-				window.metricsChartInstance.destroy();
+				if (!votosContainer || !crecimientoContainer) return;
+
+				// 2. Lógica para Top Votos (Usando los datos de la tabla de Senado/Cámara que ya tienes)
+				// Ordenamos de mayor a menor por votos (asumiendo que los datos están en countryData o similar)
+				const topVotos = [...countryData].sort((a, b) => b.votos - a.votos).slice(0, 3);
+				
+				const medals = ['border-yellow-500', 'border-slate-300', 'border-orange-400'];
+				const textMedals = ['text-yellow-600', 'text-slate-400', 'text-orange-500'];
+
+				votosContainer.innerHTML = topVotos.map((pais, index) => `
+					<div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-l-4 ${medals[index]}">
+						<div class="flex items-center gap-4">
+							<span class="text-2xl font-black ${textMedals[index]}">${index + 1}</span>
+							<div>
+								<p class="font-black text-dark text-lg uppercase">${pais.nombre}</p>
+								<p class="text-xs text-blue-600 font-bold uppercase">${index === 0 ? 'Líder en participación' : 'Alto desempeño'}</p>
+							</div>
+						</div>
+						<div class="text-right">
+							<p class="text-2xl font-black text-primary">${pais.votos.toLocaleString()}</p>
+							<p class="text-[10px] text-gray-500 uppercase font-bold">Votos Efectivos</p>
+						</div>
+					</div>
+				`).join('');
+
+				// 3. Lógica para Top Crecimiento (Ejemplo con datos estáticos basados en tu HTML)
+				// Aquí podrías calcularlo dinámicamente si tienes los datos de 2022 a la mano
+				const growthData = [
+					{ pais: 'PORTUGAL', porc: '+4,300%', v22: '1', v26: '44', color: 'bg-green-500' },
+					{ pais: 'VENEZUELA', porc: '+830%', v22: '40', v26: '372', color: 'bg-green-400' }
+				];
+
+				crecimientoContainer.innerHTML = growthData.map(item => `
+					<div class="p-4 bg-green-50 rounded-xl border-l-4 border-green-500 mb-4">
+						<div class="flex justify-between items-center mb-2">
+							<span class="font-black text-dark">${item.pais}</span>
+							<span class="text-2xl font-black text-green-600">${item.porc}</span>
+						</div>
+						<div class="flex justify-between text-[10px] text-gray-500 font-bold uppercase mb-2">
+							<span>2022: ${item.v22} Votos</span>
+							<span>2026: ${item.v26} Votos</span>
+						</div>
+						<div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+							<div class="bg-green-500 h-full" style="width: 100%"></div>
+						</div>
+					</div>
+				`).join('');
+			}
+	
+		
+	
+		// inicio script Ranking
+		function renderRankingTable() {
+			// 1. Referencias a los contenedores de las tarjetas
+			// Buscamos el primer panel (Votos) y el segundo (Crecimiento)
+			const rankingContainers = document.querySelectorAll('#view-ranking .p-6.space-y-4');
+			if (rankingContainers.length < 2) return;
+
+			const votosContainer = rankingContainers[0];
+			const crecimientoContainer = rankingContainers[1];
+
+			// 2. Inyectar TOP VOTOS (Usando countryData si existe, o affinityData como backup)
+			// Ordenamos por votos de mayor a menor y tomamos los 3 primeros
+			const sourceData = (typeof countryData !== 'undefined') ? countryData : [];
+			const topVotos = [...sourceData].sort((a, b) => b.votos - a.votos).slice(0, 3);
+
+			if (topVotos.length > 0) {
+				votosContainer.innerHTML = topVotos.map((pais, index) => {
+					const colors = ['border-yellow-500', 'border-slate-300', 'border-orange-400'];
+					const medals = ['text-yellow-600', 'text-slate-400', 'text-orange-500'];
+					return `
+						<div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border-l-4 ${colors[index]}">
+							<div class="flex items-center gap-4">
+								<span class="text-2xl font-black ${medals[index]}">${index + 1}</span>
+								<div>
+									<p class="font-black text-dark text-lg uppercase">${pais.nombre || pais.pais}</p>
+									<p class="text-xs text-blue-600 font-bold uppercase">${index === 0 ? 'Líder Global' : 'Alto Desempeño'}</p>
+								</div>
+							</div>
+							<div class="text-right">
+								<p class="text-2xl font-black text-primary">${(pais.votos || 0).toLocaleString()}</p>
+								<p class="text-[10px] text-gray-500 uppercase font-bold">Votos Efectivos</p>
+							</div>
+						</div>
+					`;
+				}).join('');
 			}
 
-			window.metricsChartInstance = new Chart(ctx, {
-				type: 'bar',
-				data: {
-					labels: ['Senado', 'Cámara'],
-					datasets: [{
-						label: 'Votos MIRA 2026',
-						data: [17032, 18234],
-						backgroundColor: ['#004f9f', '#009fe3'],
-						borderRadius: 12,
-						barThickness: 60
-					}]
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					// Añadimos una pequeña animación para confirmar que carga
-					animation: { duration: 1000 },
-					plugins: { legend: { display: false } },
-					scales: { 
-						y: { beginAtZero: true, grid: { display: false } }, 
-						x: { grid: { display: false } } 
-					}
-				}
-			});
+			// 3. Inyectar TOP CRECIMIENTO (Datos basados en tu análisis previo)
+			const growthData = [
+				{ pais: 'PORTUGAL', porc: '+4,300%', v22: '1', v26: '44', width: '100%' },
+				{ pais: 'VENEZUELA', porc: '+830%', v22: '40', v26: '372', width: '85%' },
+				{ pais: 'COREA DEL SUR', porc: '+400%', v22: '2', v26: '10', width: '70%' }
+			];
+
+			crecimientoContainer.innerHTML = growthData.map(item => `
+				<div class="p-4 bg-green-50 rounded-xl border-l-4 border-green-500 mb-3">
+					<div class="flex justify-between items-center mb-1">
+						<span class="font-black text-dark">${item.pais}</span>
+						<span class="text-2xl font-black text-success">${item.porc}</span>
+					</div>
+					<div class="flex justify-between text-[10px] text-gray-500 font-bold uppercase mb-2">
+						<span>2022: ${item.v22}</span>
+						<span>2026: ${item.v26}</span>
+					</div>
+					<div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+						<div class="bg-success h-full" style="width: ${item.width}"></div>
+					</div>
+				</div>
+			`).join('');
 		}
-		
+		// fin script Ranking
+
+
 		// navehacion y carga
 		
 			// 1. La función de navegación maestra
@@ -1273,7 +1378,7 @@
 							renderAffinityTable();
 							break;
 						case 'ranking':
-							renderAffinityTable();
+							renderRankingTable();
 							break;
 					}
 				}, 50); // 50ms son suficientes para que el DOM se asiente
